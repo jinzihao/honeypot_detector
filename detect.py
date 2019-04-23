@@ -198,6 +198,11 @@ def process_response(response):
     wfuzz_result = wfuzz_scan(r.url)
 
     # TODO: (1) launch specialized scanners (e.g. wpscan)
+    #        (2) update wfuzz dictionary for better fingerprinting
+    #        (3) behavioral inconsistency of specific web applications
+    #            (3.1) request types other than GET (POST, HEAD, PUT, DELETE, etc.), used to fingerprint web server
+    #            (3.2) response to selected exploits (RCE, DoS, etc.), used to fingerprint web server and OS (ethical?)
+    #        (4) too low version of softwares (Apache 2.0, Windows NT 4, etc.), generate a "very-unlikely" warning
 
     all_result = keyword_result.union(nmap_result, wfuzz_result)
 
