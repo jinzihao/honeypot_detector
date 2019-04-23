@@ -34,16 +34,17 @@ def keyword_scan(url, cookies, headers, text):
     result = set() # (type, name, version)
 
     # Server features -> nmap
-    header_server_string = headers['Server']
-    if find_word('apache')(header_server_string) is not None:
-        header_server_fields =  header_server_string.split("/")
-        server_name = header_server_fields[0].strip(" \t").lower()
-        server_suffix = header_server_fields[-1].split(" ")
-        if server_name == "apache":
-            result.add(("server", "apache_httpd", server_suffix[0]))
-            if len(server_suffix) > 1:
-                os_type, os_version = get_os_type_and_version(server_suffix[1].strip("()").lower())
-                result.add(("os", os_type, os_version))
+    if 'Server' in headers:
+        header_server_string = headers['Server']
+        if find_word('apache')(header_server_string) is not None:
+            header_server_fields =  header_server_string.split("/")
+            server_name = header_server_fields[0].strip(" \t").lower()
+            server_suffix = header_server_fields[-1].split(" ")
+            if server_name == "apache":
+                result.add(("server", "apache_httpd", server_suffix[0]))
+                if len(server_suffix) > 1:
+                    os_type, os_version = get_os_type_and_version(server_suffix[1].strip("()").lower())
+                    result.add(("os", os_type, os_version))
     
     # Application features
     if find_word('wordpress')(text) is not None:
@@ -180,10 +181,10 @@ def process_response(response):
     # print("content: " + r.content.decode(r.apparent_encoding))
     cookie_output = []
     for elem in r.cookies.items():
-        cookie_output.add("\t" + elem[0] + "=" + elem[1])
+        cookie_output.append("\t" + elem[0] + "=" + elem[1])
     print("cookies: " + "\n".join(cookie_output))
     print("elapsed: " + str(r.elapsed.total_seconds()))
-    print("encoding: " + r.encoding)
+    print("encoding: " + str(r.encoding))
     header_output = []
     for k, v in r.headers.items():
         header_output.append("\t" + k + "=" + v)
