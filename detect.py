@@ -6,6 +6,25 @@ import subprocess
 import urllib
 import code
 
+def get_os_type_and_version(str):
+    os_type = ""
+    os_version = ""
+    fields = str.split(" ")
+    field_ptr = 0
+    if fields[0] == "windows" or fields[0] == "linux":
+        os_type = fields[0]
+        field_ptr = 1
+    elif fields[0] == "os" and fields[1] == "x" or fields[0] == "mac" and fields[1] == "os":
+        os_type = "mac_os"
+        field_ptr = 2
+
+    if field_ptr < len(fields):
+        if fields[field_ptr] == "ubuntu" or fields[field_ptr] == "fedora" or fields[field_ptr] == "centos":
+            os_type = "linux"
+            os_version = fields[field_ptr]
+
+    return os_type, os_version
+
 def find_word(w):
     return re.compile(r'\b({0})\b'.format(w), flags=re.IGNORECASE).search
 
@@ -23,7 +42,8 @@ def keyword_scan(url, cookies, headers, text):
         if server_name == "apache":
             result.add(("server", "apache_httpd", server_suffix[0]))
             if len(server_suffix) > 1:
-                result.add(("os", server_suffix[1].strip("()").lower(), ""))
+                os_type, os_version = get_os_type_and_version(server_suffix[1].strip("()").lower())
+                result.add(("os", os_type, os_version))
     
     # Application features
     if find_word('wordpress')(text) is not None:
@@ -41,6 +61,9 @@ def keyword_scan(url, cookies, headers, text):
         result.add(("db", "postgresql", ""))
 
     # OS features -> nmap
+    if find_word('os x')(text) is not None:
+        result.add(("os", "mac_os", ""))
+
     if find_word('mac os')(text) is not None:
         result.add(("os", "mac_os", ""))
 
@@ -93,7 +116,9 @@ def nmap_scan(url):
                             if len(server_type_fields) > 1 and server_type_fields[1] == "httpd":
                                 if len(server_type_fields) > 2:
                                     output.add(("server", "apache_httpd", server_type_fields[2]))
-                                # TODO: add OS type detection
+                                    if server_type_fields[-1][0] == "(" and server_type_fields[-1][-1] == ")":
+                                        os_type, os_version = get_os_type_and_version(server_type_fields[-1].strip("()"))
+                                        output.add(("os", os_type, os_version))
 
     return output
 
